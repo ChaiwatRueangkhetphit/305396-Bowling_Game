@@ -8,12 +8,13 @@
 
 
 # -----------------------------------------------------------------------------
+
 class BowlingFrame:
     """Keeping the record of each bowling frame."""
 
-    def __init__(self, max_roll = 2):
+    def __init__(self, max_roll=2):
         """Construct a frame."""
-        self.pins = [0]*max_roll
+        self.pins = [0] * max_roll
         self.max_roll = max_roll
         self.next_roll = 0
 
@@ -25,20 +26,31 @@ class BowlingFrame:
 
     def score(self):
         """Score of each frame."""
-        total = 0
-        for index in range(self.max_roll):
-            total = total + self.pins[index]
-        return total
+        return sum(self.pins)
 
+    def is_spare(self):
+        """Check if the current frame is a spare."""
+        return self.score() == 10 and self.pins[0] != 10
+        
+    def is_strike(self):
+        """Check if the current frame is a strike."""
+        return self.pins[0] == 10
+        
 
 # -----------------------------------------------------------------------------
 class BowlingFrame10(BowlingFrame):
     """Keeping the record of the 10th bowling frame."""
-
     def __init__(self):
         """Construct a frame."""
         super().__init__(3)
 
+    def is_spare(self):
+        """Check if the current frame is a spare."""
+        return sum(self.pins[:2]) == 10 and self.pins[0] != 10
+
+    def is_strike(self):
+        """Check if the current frame is a strike."""
+        return self.pins[0] == 10 or self.pins[1] == 10
 
 # -----------------------------------------------------------------------------
 class BowlingGame:
@@ -51,8 +63,8 @@ class BowlingGame:
         self.frames = []
         for _ in range(9):
             self.frames.append(BowlingFrame())
-
-        self.frames.append(BowlingFrame10)
+            
+        self.frames.append(BowlingFrame10())
         self.cur_frame = 0      # current frame index
         self.cur_roll = 1       # current roll in frame
 
@@ -71,14 +83,13 @@ class BowlingGame:
         if self.cur_roll == 1:
             self.cur_roll = self.cur_roll + 1
         elif self.cur_roll == 2 and index != 9:
-            self.cur_frame = index + 1
+            self.cur_frame = self.cur_frame + 1
             self.cur_roll = 1
-        elif self.cur_roll == 2 and index == 9:
+        elif self.cur_roll == 2 and index == 9 and (self.frames[index].is_strike() or self.frames[index].is_spare()):
             self.cur_roll = self.cur_roll + 1
         elif self.cur_roll == 3:
-            self.cur_roll = self.cur_roll + 1
+            self.cur_roll = self.GAME_COMPLETE
         else:
-            # Error
             print("Error")
 
     def score(self):
@@ -89,10 +100,26 @@ class BowlingGame:
 
         """
         bonus = 0
-
-        # Handle spare
+        
+        # Handle score
         total = 0
         for index in range(self.cur_frame + 1):
-            total = total + self.frames[index].score()
+            total += self.frames[index].score()
 
+            # Strike bonus
+            if self.frames[index].is_strike():
+                if index == 9:
+                    bonus += self.frames[index].pins[1] + self.frames[index].pins[2]
+                elif self.frames[index + 1].is_strike():
+                    bonus += self.frames[index + 1].pins[0] + self.frames[index + 2].pins[0]
+                else:
+                    bonus += self.frames[index + 1].score()
+
+            # Spare bonus
+            if self.frames[index].is_spare():
+                if index == 9:
+                    bonus += self.frames[index].pins[2]
+                else:
+                    bonus += self.frames[index + 1].pins[0]
+                    
         return total + bonus

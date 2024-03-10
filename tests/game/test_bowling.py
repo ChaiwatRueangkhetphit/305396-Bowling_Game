@@ -96,7 +96,15 @@ def test_constructor():
         ([8, 1, 5, 3, 8, 0, 2, 3, 5, 4], 39),
 
         # # A frame with 10 pins
-        # ([2, 4, 3, 7, 7], 30),
+        # # # Spare
+        ([2, 4, 3, 7, 7], 30),
+        
+        # # # One frame strike
+        ([10, 0, 3, 6], 28),
+        
+        # # # Multi frame strike
+        ([10, 0, 10, 0, 4, 2], 46),
+        ([10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 10, 0, 6, 2], 262),
     ]
 )
 def test_given_rolls_return_score(list_of_rolls, expected_score):
